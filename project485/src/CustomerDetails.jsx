@@ -1,58 +1,104 @@
-import React, { useEffect, useState } from "react";
+// frontend/src/CustomerDetails.js
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 export default function CustomerDetails() {
   const { lockerId } = useParams();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetch(`http://localhost:3307/api/lockers/${lockerId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("API Response:", data); // Debugging
+  // Fetch customer details
+  const fetchCustomerDetails = useCallback(async () => {
+    console.log(`Fetching customer details for locker: ${lockerId}`);
+    try {
+      const response = await fetch(`http://localhost:5000/api/lockers/${lockerId}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch customer details.");
+      }
+      const data = await response.json();
 
-        if (!data.occupied) {
-          navigate("/dashboard");
-          return;
-        }
+      if (!data || !data.name) {
+        navigate("/dashboard");
+        return;
+      }
 
-        setCustomer({
-          name: data.name, // Check if this exists in API response
-          phone: data.phone, // Check if this exists in API response
-          paid: data.paid,
-          lockerId: data.id,
-        });
-      })
-      .catch((error) => console.error("Error fetching customer:", error));
+      setCustomer({
+        name: data.name,
+        phone: data.phone,
+        paid: data.paid === 1 || data.paid === true,
+        lockerId: data.lockerId,
+      });
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching customer:", error);
+      setIsLoading(false);
+    }
   }, [lockerId, navigate]);
 
-  if (!customer) return null;
+  useEffect(() => {
+    fetchCustomerDetails();
+  }, [fetchCustomerDetails]);
+
+  // Add new customer
+  
+
+  // Delete customer
+  const deleteCustomer = async () => {
+    if (window.confirm("Are you sure you want to delete this customer?")) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/customers/${lockerId}`, {
+          method: "DELETE",
+        });
+
+        if (res.ok) {
+          alert("Customer deleted successfully!");
+          navigate("/dashboard");
+        } else {
+          alert("Failed to delete customer.");
+        }
+      } catch (error) {
+        console.error("Error deleting customer:", error);
+      }
+    }
+  };
+
+  if (isLoading) return <h2>Loading...</h2>;
 
   return (
     <main style={styles.page}>
       <h1 style={styles.heading}>Customer Details</h1>
-      <div style={styles.card}>
-        <p>
-          <strong>Name:</strong> {customer.name}
-        </p>
-        <p>
-          <strong>Phone:</strong> {customer.phone}
-        </p>
-        <p>
-          <strong>Locker ID:</strong> {customer.lockerId}
-        </p>
-        <p>
-          <strong>Status:</strong> {customer.paid ? "Paid" : "Owes Balance"}
-        </p>
-        <button style={styles.button} onClick={() => navigate("/dashboard")}>
-          Back to Dashboard
-        </button>
-      </div>
+      {customer ? (
+        <div style={styles.card}>
+          <p>
+            <strong>Name:</strong> {customer.name}
+          </p>
+          <p>
+            <strong>Phone:</strong> {customer.phone}
+          </p>
+          <p>
+            <strong>Locker ID:</strong> {customer.lockerId}
+          </p>
+          <p>
+            <strong>Status:</strong> {customer.paid ? "Paid" : "Owes Balance"}
+          </p>
+          <button style={styles.deleteButton} onClick={deleteCustomer}>
+            Delete Customer
+          </button>
+        </div>
+      ) : (
+        <p>No customer assigned to this locker.</p>
+      )}
+
+
+      <button style={styles.button} onClick={() => navigate("/dashboard")}>
+        Back to Dashboard
+      </button>
     </main>
   );
 }
 
+// Styles
 const styles = {
   page: {
     padding: "2rem",
@@ -71,6 +117,7 @@ const styles = {
     boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
     maxWidth: "400px",
     margin: "0 auto",
+    marginBottom: "1rem",
   },
   button: {
     marginTop: "1rem",
@@ -80,5 +127,23 @@ const styles = {
     border: "none",
     borderRadius: "4px",
     cursor: "pointer",
+  },
+  deleteButton: {
+    marginTop: "1rem",
+    padding: "0.5rem 1rem",
+    backgroundColor: "#ef4444",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+  },
+  formContainer: {
+    marginTop: "2rem",
+    backgroundColor: "#fff",
+    padding: "1.5rem",
+    borderRadius: "8px",
+    boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
+    maxWidth: "400px",
+    margin: "0 auto",
   },
 };
