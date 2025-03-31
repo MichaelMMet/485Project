@@ -11,7 +11,7 @@
   const pool = mysql.createPool({
     host: "localhost",
     user: "root",
-    password: "Pokibear143!", // Make sure this is correct
+    password: "Running_Mac17", // Make sure this is correct
     database: "lockers",
     port: 3306, // Default MySQL port, should not be 5000
   });

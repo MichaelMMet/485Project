@@ -31,24 +31,24 @@ export default function AddCustomer() {
 
   const addCustomer = async (e) => {
     e.preventDefault();
-  
+
     if (!lockerId) {
       alert("Please select a locker before adding a customer.");
       return;
     }
-  
+
     const newCustomer = { name, phone, paid, locker_id: lockerId };
-  
+
     try {
       const res = await fetch("http://localhost:5000/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCustomer),
       });
-  
+
       if (res.ok) {
         alert("Customer added successfully!");
-  
+
         // Fetch lockers again to update the available list
         await fetchLockers(); // Refetch lockers after adding customer
         navigate("/dashboard"); // Redirect to dashboard
@@ -59,8 +59,6 @@ export default function AddCustomer() {
       console.error("Error adding customer:", error);
     }
   };
-  
-  
 
   return (
     <main style={styles.page}>
@@ -86,6 +84,7 @@ export default function AddCustomer() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+          placeholder="John Smith"
         />
 
         <label>Phone:</label>
@@ -93,6 +92,7 @@ export default function AddCustomer() {
           type="text"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
+          placeholder="ex. (661)644-4142"
         />
 
         <label>Paid:</label>

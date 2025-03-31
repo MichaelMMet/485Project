@@ -1,37 +1,39 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState('');
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const correctPin = '1234'; // You can replace this with backend logic later
+  const correctPin = "1234"; // You can replace this with backend logic later
 
   const handleLogin = (e) => {
     e.preventDefault();
     if (pin === correctPin) {
-      localStorage.setItem('managerLoggedIn', 'true');
-      navigate('/dashboard');
+      localStorage.setItem("managerLoggedIn", "true");
+      navigate("/dashboard");
     } else {
-      setError('Invalid PIN. Please try again.');
+      setError("Invalid PIN. Please try again.");
     }
   };
 
   return (
     <main style={styles.container}>
       <div style={styles.box}>
-        <h1 style={styles.heading}>Manager Login</h1>
+        <h1 style={styles.heading}>Locker Manager Login.</h1>
         <form onSubmit={handleLogin} style={styles.form}>
           <input
             type="password"
-            placeholder="Enter PIN"
+            placeholder="Enter PIN (PIN is 1234)"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
             style={styles.input}
           />
           {error && <p style={styles.error}>{error}</p>}
-          <button type="submit" style={styles.button}>Login</button>
+          <button type="submit" style={styles.button}>
+            Login
+          </button>
         </form>
       </div>
     </main>
