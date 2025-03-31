@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [lockers, setLockers] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const location = useLocation(); // Detects route changes
 
   // Fetch lockers and customers from backend
   const fetchData = async () => {
@@ -18,7 +20,9 @@ export default function Dashboard() {
       setLockers(lockersData);
 
       // Fetch customers
-      const customersResponse = await fetch("http://localhost:5000/api/customers");
+      const customersResponse = await fetch(
+        "http://localhost:5000/api/customers"
+      );
       if (!customersResponse.ok) {
         throw new Error("Failed to fetch customers.");
       }
@@ -30,10 +34,21 @@ export default function Dashboard() {
     }
   };
 
+  const fetchLockers = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/lockers");
+      if (!response.ok) throw new Error("Failed to fetch lockers");
+      setLockers(await response.json());
+    } catch (error) {
+      console.error("Error fetching lockers:", error);
+    }
+  };
+
   //  Auto-fetch data when the dashboard loads
   useEffect(() => {
+    fetchLockers();
     fetchData();
-  }, []);
+  }, [location]);
 
   // Separate customers who have paid and those who owe balance
   const owing = customers.filter((c) => !c.paid);
@@ -68,35 +83,33 @@ export default function Dashboard() {
             <strong>Total Lockers:</strong> {lockers.length}
           </p>
           <p>
-            <strong>Occupied:</strong> {lockers.filter((l) => l.occupied).length}
+            <strong>Occupied:</strong>{" "}
+            {lockers.filter((l) => l.occupied).length}
           </p>
           <p>
             <strong>Vacant:</strong> {lockers.filter((l) => !l.occupied).length}
           </p>
         </section>
 
-        
-  {/* Customer Overview Section with Add Button */}
-  <section style={styles.card}>
-    <h2 style={styles.titleContainer}>
-      Customer Overview
-      <button
-        style={styles.addButton}
-        onClick={() => navigate("/add-customer")}
-      >
-        + Add
-      </button>
-    </h2>
-    <p>
-      <strong>Customers Owing:</strong> {owing.length}
-    </p>
-    <p>
-      <strong>Customers Paid:</strong> {paid.length}
-    </p>
-  </section>
-
-
-</div>
+        {/* Customer Overview Section with Add Button */}
+        <section style={styles.card}>
+          <h2 style={styles.titleContainer}>
+            Customer Overview
+            <button
+              style={styles.addButton}
+              onClick={() => navigate("/add-customer")}
+            >
+              + Add
+            </button>
+          </h2>
+          <p>
+            <strong>Customers Owing:</strong> {owing.length}
+          </p>
+          <p>
+            <strong>Customers Paid:</strong> {paid.length}
+          </p>
+        </section>
+      </div>
 
       {/* Locker Layout */}
       <section style={{ ...styles.card, marginTop: "2rem" }}>
@@ -188,13 +201,12 @@ const styles = {
     textAlign: "center",
     transition: "background-color 0.2s ease-in-out",
   },
-  
+
   // Add hover effect for better UX
   addButtonHover: {
     backgroundColor: "#2563eb", // Darker blue on hover
   },
-  
-  
+
   lockerGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",

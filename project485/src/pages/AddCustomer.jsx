@@ -21,7 +21,7 @@ export default function AddCustomer() {
       // Only show vacant lockers
       setLockers(data.filter((locker) => !locker.occupied));
     } catch (error) {
-      console.error(" Error fetching lockers:", error);
+      console.error("Error fetching lockers:", error);
     }
   };
 
@@ -29,7 +29,7 @@ export default function AddCustomer() {
     fetchLockers();
   }, []);
 
-  //  Add new customer and navigate back to dashboard
+  // Add new customer and update locker status to occupied
   const addCustomer = async (e) => {
     e.preventDefault();
 
@@ -46,6 +46,7 @@ export default function AddCustomer() {
     };
 
     try {
+      // 1. Add the customer
       const res = await fetch("http://localhost:5000/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -53,10 +54,19 @@ export default function AddCustomer() {
       });
 
       if (res.ok) {
-        alert(" Customer added successfully!");
-        navigate("/dashboard"); // Redirect back to dashboard
+        alert("Customer added successfully!");
+
+        // 2. Update the locker to be occupied
+        await fetch(`http://localhost:5000/api/lockers/${lockerId}`, {
+          method: "PATCH", // Use PATCH to update a specific locker
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ occupied: true }), // Set the locker to occupied
+        });
+
+        // Redirect back to dashboard after both actions
+        navigate("/dashboard");
       } else {
-        alert(" Failed to add customer.");
+        alert("Failed to add customer.");
       }
     } catch (error) {
       console.error("Error adding customer:", error);
@@ -97,7 +107,10 @@ export default function AddCustomer() {
         />
 
         <label>Paid:</label>
-        <select value={paid} onChange={(e) => setPaid(e.target.value === "true")}>
+        <select
+          value={paid}
+          onChange={(e) => setPaid(e.target.value === "true")}
+        >
           <option value="false">No</option>
           <option value="true">Yes</option>
         </select>
@@ -106,10 +119,7 @@ export default function AddCustomer() {
           + Add Customer
         </button>
       </form>
-      <button
-        style={styles.backButton}
-        onClick={() => navigate("/dashboard")}
-      >
+      <button style={styles.backButton} onClick={() => navigate("/dashboard")}>
         Back to Dashboard
       </button>
     </main>

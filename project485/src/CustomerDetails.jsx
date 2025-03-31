@@ -12,7 +12,9 @@ export default function CustomerDetails() {
   const fetchCustomerDetails = useCallback(async () => {
     console.log(`Fetching customer details for locker: ${lockerId}`);
     try {
-      const response = await fetch(`http://localhost:5000/api/lockers/${lockerId}`);
+      const response = await fetch(
+        `http://localhost:5000/api/lockers/${lockerId}`
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch customer details.");
       }
@@ -22,8 +24,9 @@ export default function CustomerDetails() {
         navigate("/dashboard");
         return;
       }
-
+      console.log(data);
       setCustomer({
+        id: data.customerId, // Use lockerId as the customer identifier
         name: data.name,
         phone: data.phone,
         paid: data.paid === 1 || data.paid === true,
@@ -41,19 +44,31 @@ export default function CustomerDetails() {
   }, [fetchCustomerDetails]);
 
   // Add new customer
-  
 
   // Delete customer
   const deleteCustomer = async () => {
+    console.log("Customer object:", customer);
+    console.log("Deleting customer with Locker ID:", customer.lockerId); // Use lockerId for deletion
+
+    const customerId = customer.id; // ✅ Correct: Use customer.id (which comes from the database)
+
     if (window.confirm("Are you sure you want to delete this customer?")) {
       try {
-        const res = await fetch(`http://localhost:5000/api/customers/${lockerId}`, {
-          method: "DELETE",
-        });
+        const res = await fetch(
+          `http://localhost:5000/api/customers/${customerId}`,
+          {
+            method: "DELETE",
+          }
+        );
 
         if (res.ok) {
           alert("Customer deleted successfully!");
           navigate("/dashboard");
+          await fetch(`http://localhost:5000/api/lockers/${lockerId}`, {
+            method: "PATCH", // Use PATCH to update a specific locker
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ occupied: false }), // Set the locker to vacant
+          });
         } else {
           alert("Failed to delete customer.");
         }
@@ -89,7 +104,6 @@ export default function CustomerDetails() {
       ) : (
         <p>No customer assigned to this locker.</p>
       )}
-
 
       <button style={styles.button} onClick={() => navigate("/dashboard")}>
         Back to Dashboard
