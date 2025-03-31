@@ -29,49 +29,38 @@ export default function AddCustomer() {
     fetchLockers();
   }, []);
 
-  // Add new customer and update locker status to occupied
   const addCustomer = async (e) => {
     e.preventDefault();
-
+  
     if (!lockerId) {
       alert("Please select a locker before adding a customer.");
       return;
     }
-
-    const newCustomer = {
-      name,
-      phone,
-      paid,
-      locker_id: lockerId,
-    };
-
+  
+    const newCustomer = { name, phone, paid, locker_id: lockerId };
+  
     try {
-      // 1. Add the customer
       const res = await fetch("http://localhost:5000/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCustomer),
       });
-
+  
       if (res.ok) {
         alert("Customer added successfully!");
-
-        // 2. Update the locker to be occupied
-        await fetch(`http://localhost:5000/api/lockers/${lockerId}`, {
-          method: "PATCH", // Use PATCH to update a specific locker
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ occupied: true }), // Set the locker to occupied
-        });
-
-        // Redirect back to dashboard after both actions
-        navigate("/dashboard");
+  
+        // Fetch lockers again to update the available list
+        await fetchLockers(); // Refetch lockers after adding customer
+        navigate("/dashboard"); // Redirect to dashboard
       } else {
-        alert("Failed to add customer.");
+        alert("Failed to add customer. Locker might already be occupied.");
       }
     } catch (error) {
       console.error("Error adding customer:", error);
     }
   };
+  
+  
 
   return (
     <main style={styles.page}>

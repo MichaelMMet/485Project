@@ -11,7 +11,7 @@
   const pool = mysql.createPool({
     host: "localhost",
     user: "root",
-    password: "Running_Mac17", // Make sure this is correct
+    password: "Pokibear143!", // Make sure this is correct
     database: "lockers",
     port: 3306, // Default MySQL port, should not be 5000
   });
@@ -115,26 +115,41 @@
 
   // Create a new customer
   app.post("/api/customers", async (req, res) => {
-      const { name, phone, paid, locker_id } = req.body;
-      try {
-        const [result] = await promisePool.query(
+    const { name, phone, paid, locker_id } = req.body;
+  
+    try {
+      // 1. Add the customer to the database
+      const [result] = await promisePool.query(
+        `
+        INSERT INTO Customers (name, phone, paid, locker_id)
+        VALUES (?, ?, ?, ?)
+        `,
+        [name, phone, paid, locker_id || null]
+      );
+  
+      // 2. Update the locker to occupied
+      if (locker_id) {
+        await promisePool.query(
           `
-          INSERT INTO Customers (name, phone, paid, locker_id)
-          VALUES (?, ?, ?, ?)
+          UPDATE Lockers
+          SET occupied = TRUE
+          WHERE id = ?
           `,
-          [name, phone, paid, locker_id || null]
+          [locker_id]
         );
-    
-        res.status(201).json({
-          success: true,
-          message: "Customer added successfully!",
-          customerId: result.insertId,
-        });
-      } catch (error) {
-        console.error(" Error adding customer:", error.message);
-        res.status(500).json({ error: "Failed to add customer" });
       }
-    });
+  
+      res.status(201).json({
+        success: true,
+        message: "Customer added successfully!",
+        customerId: result.insertId,
+      });
+    } catch (error) {
+      console.error("Error adding customer:", error.message);
+      res.status(500).json({ error: "Failed to add customer" });
+    }
+  });
+  
     
     // Delete a customer by ID
   app.delete("/api/customers/:id", async (req, res) => {
@@ -160,27 +175,27 @@
     });
 
     app.patch("/api/lockers/:lockerId", async (req, res) => {
-      const { lockerId } = req.params;
-      const { occupied } = req.body; // Get the new occupied status
-    
-      try {
-        const [result] = await promisePool.query(
-          `
-          UPDATE Lockers
-          SET occupied = ?
-          WHERE id = ?
-          `,
-          [occupied, lockerId] // Update the occupied status in the DB
-        );
-    
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ message: "Locker not found" });
+        const { lockerId } = req.params;
+        const { occupied } = req.body;
+      
+        try {
+          const [result] = await promisePool.query(
+            `
+            UPDATE Lockers
+            SET occupied = ?
+            WHERE id = ?
+            `,
+            [occupied, lockerId]
+          );
+      
+          if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Locker not found" });
+          }
+      
+          res.status(200).json({ message: "Locker updated successfully!" });
+        } catch (error) {
+          console.error("Error updating locker:", error.message);
+          res.status(500).json({ message: "Error updating locker" });
         }
-    
-        res.status(200).json({ message: "Locker updated successfully!" });
-      } catch (error) {
-        console.error("Error updating locker:", error.message);
-        res.status(500).json({ message: "Error updating locker" });
-      }
-    });
-    
+      });
+      

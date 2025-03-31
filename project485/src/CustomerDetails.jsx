@@ -50,7 +50,7 @@ export default function CustomerDetails() {
     console.log("Customer object:", customer);
     console.log("Deleting customer with Locker ID:", customer.lockerId); // Use lockerId for deletion
 
-    const customerId = customer.id; // ✅ Correct: Use customer.id (which comes from the database)
+    const customerId = customer.id; // Correct: Use customer.id (which comes from the database)
 
     if (window.confirm("Are you sure you want to delete this customer?")) {
       try {
